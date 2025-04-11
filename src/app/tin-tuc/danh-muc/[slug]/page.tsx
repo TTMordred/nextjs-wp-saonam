@@ -33,7 +33,7 @@ export async function generateMetadata({ params }: CategoryParams): Promise<Meta
   try {
     const categories = await getCategories();
     const category = categories.find((cat: Term) => cat.slug === params.slug);
-    
+
     if (!category) {
       return {
         title: 'Danh mục không tồn tại | Sao Nam TG',
@@ -62,7 +62,7 @@ async function getCategoryData(slug: string, page = 1) {
     ]);
 
     const category = categories.find((cat: Term) => cat.slug === slug);
-    
+
     return {
       category,
       posts: postsData.posts ?? [],
@@ -83,15 +83,15 @@ async function getCategoryData(slug: string, page = 1) {
 export default async function CategoryPage({ params, searchParams }: Readonly<CategoryParams>) {
   const currentPage = searchParams.page ? parseInt(searchParams.page, 10) : 1;
   const { category, posts, totalPages } = await getCategoryData(params.slug, currentPage);
-  
+
   if (!category) {
     return (
       <div className="container mx-auto px-4 py-12">
         <div className="max-w-3xl mx-auto text-center">
           <h1 className="text-4xl font-bold mb-4">Danh mục không tồn tại</h1>
           <p className="text-lg mb-8">Không tìm thấy danh mục bạn đang tìm kiếm.</p>
-          <Link 
-            href="/tin-tuc" 
+          <Link
+            href="/tin-tuc"
             className="bg-blue-600 text-white px-6 py-3 rounded-full font-medium hover:bg-blue-700 transition duration-200"
           >
             Quay lại trang Tin tức
@@ -118,7 +118,7 @@ export default async function CategoryPage({ params, searchParams }: Readonly<Ca
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {posts.map((post) => (
             <article key={post.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
-              {post.featured_media && post._embedded?.['wp:featuredmedia']?.[0] && (
+              {!!(post.featured_media && post._embedded?.['wp:featuredmedia']?.[0]) && (
                 <div className="relative h-48 w-full">
                   <Image
                     src={post._embedded['wp:featuredmedia'][0].source_url}

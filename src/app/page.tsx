@@ -78,7 +78,7 @@ async function getHomePageData() {
 
 export default async function Home() {
   const { homePage, latestPosts } = await getHomePageData();
-  
+
   const defaultHeroTitle = "CÔNG TY TNHH SAO NAM TG (STC)";
   const defaultHeroDescription = "Được thành lập vào ngày 01 tháng 08 năm 2000 với mục tiêu: STC là Công ty thành lập để phục vụ khách hàng và cam kết cung cấp cho khách hàng các sản phẩm và dịch vụ hoàn hảo nhất nhằm đem lại sự hài lòng cao nhất từ phía khách hàng.";
 
@@ -114,10 +114,10 @@ export default async function Home() {
         <section className="bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg p-8 mb-12">
           <div className="max-w-3xl mx-auto text-center">
             <h1 className="text-4xl font-bold mb-4">
-              {(homePage as HomePageData)?.acf?.hero_title || defaultHeroTitle}
+              {(homePage as HomePageData)?.acf?.hero_title ?? defaultHeroTitle}
             </h1>
             <p className="text-xl mb-6">
-              {(homePage as HomePageData)?.acf?.hero_description || defaultHeroDescription}
+              {(homePage as HomePageData)?.acf?.hero_description ?? defaultHeroDescription}
             </p>
             <div className="flex flex-wrap justify-center gap-4">
               <Link
@@ -141,7 +141,7 @@ export default async function Home() {
           <h2 className="text-3xl font-bold text-center mb-10">Dịch vụ của chúng tôi</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {services.map((service: Service, index: number) => (
-              <div key={index} className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
+              <div key={`service-${service.title}-${index}`} className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
                 <div className="text-blue-600 mb-4">
                   <Image
                     src={service.icon.startsWith('http') ? service.icon : `/${service.icon}.svg`}
@@ -182,7 +182,7 @@ export default async function Home() {
                   {post.featured_media ? (
                     <div className="relative h-48 w-full">
                       <Image
-                        src={post._embedded?.['wp:featuredmedia']?.[0]?.source_url || '/placeholder.jpg'}
+                        src={post._embedded?.['wp:featuredmedia']?.[0]?.source_url ?? '/placeholder.jpg'}
                         alt={post.title.rendered}
                         fill
                         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw"
@@ -216,7 +216,7 @@ export default async function Home() {
             <h2 className="text-3xl font-bold text-center mb-10">Đối tác của chúng tôi</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
               {partners.map((partner: Partner, index: number) => (
-                <div key={index} className="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300">
+                <div key={`partner-${partner.name}-${index}`} className="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300">
                   <div className="relative h-16 w-full">
                     <Image
                       src={partner.logo.url}
@@ -235,16 +235,16 @@ export default async function Home() {
         {/* CTA Section */}
         <section className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg p-8 text-center">
           <h2 className="text-3xl font-bold mb-4">
-            {(homePage as HomePageData)?.acf?.cta_title || "Bạn cần hỗ trợ?"}
+            {(homePage as HomePageData)?.acf?.cta_title ?? "Bạn cần hỗ trợ?"}
           </h2>
           <p className="text-xl text-gray-600 mb-6 max-w-2xl mx-auto">
-            {(homePage as HomePageData)?.acf?.cta_description || "Liên hệ với chúng tôi ngay hôm nay để được tư vấn và hỗ trợ về các sản phẩm và dịch vụ."}
+            {(homePage as HomePageData)?.acf?.cta_description ?? "Liên hệ với chúng tôi ngay hôm nay để được tư vấn và hỗ trợ về các sản phẩm và dịch vụ."}
           </p>
           <Link
             href="/lien-he"
             className="bg-blue-600 text-white px-8 py-3 rounded-full font-medium hover:bg-blue-700 transition duration-200 inline-flex items-center"
           >
-            {(homePage as HomePageData)?.acf?.cta_button_text || "Liên hệ ngay"}
+            {(homePage as HomePageData)?.acf?.cta_button_text ?? "Liên hệ ngay"}
             <svg className="w-4 h-4 ml-2" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
             </svg>

@@ -9,15 +9,15 @@ const wpApi = axios.create({
 });
 
 // Add authentication for protected endpoints if needed
-const getAuthHeader = () => {
+export const getAuthHeader = () => {
   const username = process.env.WP_USERNAME;
   const password = process.env.WP_APP_PASSWORD;
-  
+
   if (username && password) {
     const token = Buffer.from(`${username}:${password}`).toString('base64');
     return { Authorization: `Basic ${token}` };
   }
-  
+
   return {};
 };
 
@@ -36,7 +36,7 @@ export async function getPage(slug) {
   try {
     const response = await wpApi.get(`/pages?slug=${slug}&_embed&acf_format=standard`);
     if (!response.data.length) return null;
-    
+
     const page = response.data[0];
     return {
       ...page,

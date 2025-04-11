@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
@@ -28,14 +28,14 @@ export default function Header() {
   const pathname = usePathname();
 
   // Default navigation items as fallback
-  const defaultNavigation = [
+  const defaultNavigation = useMemo(() => [
     { id: 1, title: 'Trang chủ', url: '/' },
     { id: 2, title: 'Giới thiệu', url: '/gioi-thieu' },
     { id: 3, title: 'Sản phẩm', url: '/san-pham' },
     { id: 4, title: 'Dịch Vụ', url: '/dich-vu' },
     { id: 5, title: 'Tin Tức', url: '/tin-tuc' },
     { id: 6, title: 'Liên hệ', url: '/lien-he' },
-  ];
+  ], []);
 
   useEffect(() => {
     async function fetchData() {
@@ -56,7 +56,7 @@ export default function Header() {
     }
 
     fetchData();
-  }, []);
+  }, [defaultNavigation]);
 
   // Close mobile menu when route changes
   useEffect(() => {
@@ -92,8 +92,8 @@ export default function Header() {
           <Link href="/" className="flex items-center">
             <div className="relative h-16 w-48">
               <Image
-                src={globalSettings.site_logo?.url || '/logo.png'}
-                alt={globalSettings.site_logo?.alt || globalSettings.site_name || 'Sao Nam TG'}
+                src={globalSettings.site_logo?.url ?? '/logo.png'}
+                alt={globalSettings.site_logo?.alt ?? globalSettings.site_name ?? 'Sao Nam TG'}
                 fill
                 style={{ objectFit: 'contain' }}
                 priority

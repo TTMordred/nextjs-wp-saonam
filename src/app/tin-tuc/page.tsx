@@ -25,7 +25,7 @@ async function getBlogData(page = 1, category?: string, search?: string) {
       getPosts(page, POSTS_PER_PAGE, { category, search }),
       getCategories(),
     ]);
-    
+
     return {
       posts: postsData.posts ?? [],
       totalPages: postsData.totalPages ?? 1,
@@ -56,7 +56,8 @@ export default async function BlogPage({ searchParams }: Readonly<BlogPageProps>
     if (page > 1) params.set('page', page.toString());
     if (searchParams.category) params.set('category', searchParams.category);
     if (searchParams.search) params.set('search', searchParams.search);
-    return `/tin-tuc${params.toString() ? `?${params}` : ''}`;
+    const queryString = params.toString();
+    return `/tin-tuc${queryString ? '?' + queryString : ''}`;
   }
 
   return (
@@ -121,7 +122,7 @@ export default async function BlogPage({ searchParams }: Readonly<BlogPageProps>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {posts.map((post) => (
             <article key={post.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
-              {post.featured_media && post._embedded?.['wp:featuredmedia']?.[0] && (
+              {!!(post.featured_media && post._embedded?.['wp:featuredmedia']?.[0]) && (
                 <div className="relative h-48 w-full">
                   <Image
                     src={post._embedded['wp:featuredmedia'][0].source_url}

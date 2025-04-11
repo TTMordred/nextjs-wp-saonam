@@ -1,6 +1,5 @@
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   images: {
     domains: ['saonamtg.com'],
     remotePatterns: [
@@ -13,9 +12,11 @@ const nextConfig: NextConfig = {
   },
   // Enable static exports for hosting on traditional servers if needed
   // output: 'export',
-
-  // External packages for server components
-  serverExternalPackages: ['sharp'],
+  
+  // Increase the timeout for API requests if needed
+  experimental: {
+    serverComponentsExternalPackages: ['sharp'],
+  },
 };
 
-export default nextConfig;
+module.exports = nextConfig;

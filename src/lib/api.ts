@@ -74,10 +74,11 @@ const wpApi = axios.create({
 });
 
 // Basic authentication for protected endpoints
-const auth = {
-  username: process.env.WP_USERNAME ?? '',
-  password: process.env.WP_APP_PASSWORD ?? '',
-};
+// Uncomment and use this when you need to access protected endpoints
+// const auth = {
+//   username: process.env.WP_USERNAME ?? '',
+//   password: process.env.WP_APP_PASSWORD ?? '',
+// };
 
 // Fetch pages
 export async function getPage(slug: string): Promise<Post | null> {
@@ -140,7 +141,7 @@ export async function getPosts(
     }
 
     const response = await wpApi.get(`/posts?${queryParams.toString()}`);
-    
+
     return {
       posts: response.data as ReadonlyArray<Post>,
       totalPages: Number(response.headers['x-wp-totalpages'] ?? 1),
@@ -188,11 +189,22 @@ export async function getTags(): Promise<ReadonlyArray<Term>> {
 // Fetch menu items (requires WP REST API Menus plugin)
 export async function getMenuItems(location: string) {
   try {
-    const response = await wpApi.get(`menus/v1/locations/${location}`, { auth });
+    // Try to fetch from the WP REST API Menus plugin endpoint
+    const response = await wpApi.get(`/menus/v1/locations/${location}`);
     return response.data ?? null;
   } catch (error) {
     console.error(`Error fetching menu for location ${location}:`, error);
-    return null;
+    // Return default menu items if the API call fails
+    return {
+      items: [
+        { id: 1, title: 'Trang chủ', url: '/' },
+        { id: 2, title: 'Giới thiệu', url: '/gioi-thieu' },
+        { id: 3, title: 'Sản phẩm', url: '/san-pham' },
+        { id: 4, title: 'Dịch Vụ', url: '/dich-vu' },
+        { id: 5, title: 'Tin Tức', url: '/tin-tuc' },
+        { id: 6, title: 'Liên hệ', url: '/lien-he' },
+      ]
+    };
   }
 }
 
@@ -229,6 +241,30 @@ export async function searchContent(
   } catch (error) {
     console.error('Error searching content:', error);
     return [];
+  }
+}
+
+// Fetch global settings (site title, logo, etc.)
+export async function getGlobalSettings() {
+  try {
+    // Assuming you have a custom endpoint or options page
+    // If using ACF to REST API plugin, you might use /acf/v3/options/options
+    const response = await wpApi.get('/acf/v3/options/options');
+    return response.data?.acf ?? {};
+  } catch (error) {
+    console.error('Error fetching global settings:', error);
+    // Return default values
+    return {
+      site_name: 'Sao Nam TG',
+      site_description: 'Công ty TNHH Thương mại và Dịch vụ Sao Nam',
+      site_logo: {
+        url: '/logo.png',
+        alt: 'Sao Nam TG Logo'
+      },
+      contact_email: 'info@saonamtg.com',
+      contact_phone: '0123456789',
+      social_links: []
+    };
   }
 }
 

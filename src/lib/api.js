@@ -107,3 +107,61 @@ export async function getPost(slug) {
 // Fetch all media items
 export async function getAllMedia(page = 1, perPage = 100) {
   try {
+    const response = await wpApi.get(`/media?page=${page}&per_page=${perPage}`);
+    return {
+      media: response.data,
+      totalPages: parseInt(response.headers['x-wp-totalpages'] || '1', 10),
+      total: parseInt(response.headers['x-wp-total'] || '0', 10),
+    };
+  } catch (error) {
+    return handleError(error, 'getAllMedia') || { media: [], totalPages: 0, total: 0 };
+  }
+}
+
+// Fetch menu items (requires WP REST API Menus plugin)
+export async function getMenuItems(menuLocation) {
+  try {
+    const response = await axios.get(
+      `${process.env.NEXT_PUBLIC_WP_API_URL.replace('/wp/v2', '')}/menus/v1/locations/${menuLocation}`
+    );
+    return response.data || null;
+  } catch (error) {
+    return handleError(error, 'getMenuItems');
+  }
+}
+
+// Fetch global settings (requires ACF)
+export async function getGlobalSettings() {
+  try {
+    const response = await axios.get(
+      `${process.env.NEXT_PUBLIC_WP_API_URL.replace('/wp/v2', '/acf/v3')}/options`
+    );
+    return response.data || null;
+  } catch (error) {
+    return handleError(error, 'getGlobalSettings');
+  }
+}
+
+// Fetch categories with post counts
+export async function getCategories() {
+  try {
+    const response = await wpApi.get('/categories?per_page=100&hide_empty=true');
+    return response.data || [];
+  } catch (error) {
+    return handleError(error, 'getCategories') || [];
+  }
+}
+
+// Search content across posts and pages
+export async function searchContent(query, type = 'post', perPage = 10) {
+  try {
+    const response = await wpApi.get(`/${type}s?search=${encodeURIComponent(query)}&per_page=${perPage}&_embed`);
+    return response.data.map(item => ({
+      ...item,
+      featuredImage: item._embedded?.['wp:featuredmedia']?.[0]?.source_url || null,
+      type,
+    }));
+  } catch (error) {
+    return handleError(error, 'searchContent') || [];
+  }
+}

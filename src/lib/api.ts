@@ -177,10 +177,30 @@ export async function getPost(slug: string): Promise<Post | null> {
 // Fetch categories
 export async function getCategories(): Promise<ReadonlyArray<Term>> {
   try {
-    const response = await wpApiV2.get('/categories?per_page=100&hide_empty=true');
+    const response = await wpApiV2.get('/categories?per_page=100');
     return response.data ?? [];
   } catch (error) {
     console.error('Error fetching categories:', error);
+    return [];
+  }
+}
+
+// Fetch product categories
+export async function getProductCategories(): Promise<ReadonlyArray<Term>> {
+  try {
+    // Try to fetch product categories from WooCommerce API
+    try {
+      const response = await wpApiCustom.get('/wc/v3/products/categories?per_page=100');
+      return response.data ?? [];
+    } catch (error) {
+      console.log('WooCommerce API not available, trying taxonomy endpoint...', error);
+
+      // Fallback to product_cat taxonomy if WooCommerce API is not available
+      const response = await wpApiV2.get('/product_cat?per_page=100');
+      return response.data ?? [];
+    }
+  } catch (error) {
+    console.error('Error fetching product categories:', error);
     return [];
   }
 }
@@ -287,22 +307,33 @@ export async function getGlobalSettings() {
       // First try ACF endpoint if available
       const acfResponse = await wpApiCustom.get('/acf/v3/options/options');
       if (acfResponse.data?.acf) {
+        // Ensure logo URL is absolute
+        if (acfResponse.data.acf.site_logo?.url && !acfResponse.data.acf.site_logo.url.startsWith('http')) {
+          acfResponse.data.acf.site_logo.url = `https://saonamtg.com${acfResponse.data.acf.site_logo.url}`;
+        }
         return acfResponse.data.acf;
       }
-    } catch {
-      console.log('ACF options not available, trying site info...');
+    } catch (acfError) {
+      console.log('ACF options not available, trying site info...', acfError);
     }
 
     // Fallback to basic site info
     const siteResponse = await wpApiCustom.get('/');
     if (siteResponse.data) {
       const { name, description, url, site_logo_url } = siteResponse.data;
+      let logoUrl = site_logo_url;
+
+      // Ensure logo URL is absolute
+      if (logoUrl && !logoUrl.startsWith('http')) {
+        logoUrl = `https://saonamtg.com${logoUrl}`;
+      }
+
       return {
         site_name: name,
         site_description: description,
         site_url: url,
-        site_logo: site_logo_url ? {
-          url: site_logo_url,
+        site_logo: logoUrl ? {
+          url: logoUrl,
           alt: name
         } : {
           url: '/logo.png',

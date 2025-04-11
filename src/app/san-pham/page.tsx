@@ -1,7 +1,7 @@
 import { getPage } from '@/lib/api';
-import { formatContent } from '@/lib/formatContent';
 import Image from 'next/image';
 import Link from 'next/link';
+import { ensureAbsoluteImageUrl, shouldUnoptimizeImage } from '@/lib/imageUtils';
 
 async function getProductsPageData() {
   // Fetch products page content from WordPress
@@ -18,48 +18,48 @@ export default async function ProductsPage() {
       id: 1,
       name: 'Máy tính, laptop',
       slug: 'may-tinh-laptop-linh-kien',
-      image: '/placeholder.jpg',
+      image: '/images/products/may-tinh-laptop.jpg',
     },
     {
       id: 2,
       name: 'Máy in, máy đa chức năng',
       slug: 'may-in-da-chuc-nang',
-      image: '/placeholder.jpg',
+      image: '/images/products/may-in.jpg',
     },
     {
       id: 3,
       name: 'Máy photocopy',
       slug: 'may-photocopy',
-      image: '/placeholder.jpg',
+      image: '/images/products/may-photocopy.jpg',
     },
     {
       id: 4,
       name: 'Máy in siêu tốc',
       slug: 'may-photocopy-phu-kien',
-      image: '/placeholder.jpg',
+      image: '/images/products/may-in-sieu-toc.jpg',
     },
     {
       id: 5,
       name: 'Máy chiếu',
       slug: 'may-chieu-phu-kien',
-      image: '/placeholder.jpg',
+      image: '/images/products/may-chieu.jpg',
     },
     {
       id: 6,
       name: 'Máy scan',
       slug: 'may-scan',
-      image: '/placeholder.jpg',
+      image: '/images/products/may-scan.jpg',
     },
   ];
 
   return (
     <div className="container mx-auto px-4 py-12">
       <h1 className="text-4xl font-bold mb-8 text-center">Sản phẩm</h1>
-      
+
       {productsPage ? (
         <div>
           {/* If we have WordPress content, render it */}
-          <div 
+          <div
             className="prose prose-lg max-w-none mb-12"
             dangerouslySetInnerHTML={{ __html: productsPage.content.rendered }}
           />
@@ -76,18 +76,19 @@ export default async function ProductsPage() {
       {/* Product Categories */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
         {productCategories.map((category) => (
-          <Link 
-            key={category.id} 
+          <Link
+            key={category.id}
             href={`/san-pham/${category.slug}`}
             className="group"
           >
             <div className="bg-white rounded-lg overflow-hidden shadow-md transition-transform group-hover:shadow-lg group-hover:-translate-y-1">
               <div className="relative h-48 w-full">
-                <Image 
-                  src={category.image}
+                <Image
+                  src={ensureAbsoluteImageUrl(category.image)}
                   alt={category.name}
                   fill
                   style={{ objectFit: 'cover' }}
+                  unoptimized={shouldUnoptimizeImage(category.image)}
                 />
               </div>
               <div className="p-6">
@@ -105,41 +106,45 @@ export default async function ProductsPage() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
           <div className="bg-white p-4 rounded-lg shadow-sm flex items-center justify-center">
             <div className="relative h-16 w-full">
-              <Image 
-                src="/placeholder-logo.png" 
-                alt="Brand Logo" 
+              <Image
+                src={ensureAbsoluteImageUrl('/images/brands/brand-logo.png')}
+                alt="Brand Logo"
                 fill
                 style={{ objectFit: 'contain' }}
+                unoptimized={shouldUnoptimizeImage('/images/brands/brand-logo.png')}
               />
             </div>
           </div>
           <div className="bg-white p-4 rounded-lg shadow-sm flex items-center justify-center">
             <div className="relative h-16 w-full">
-              <Image 
-                src="/placeholder-logo.png" 
-                alt="Brand Logo" 
+              <Image
+                src={ensureAbsoluteImageUrl('/images/brands/brand-logo.png')}
+                alt="Brand Logo"
                 fill
                 style={{ objectFit: 'contain' }}
+                unoptimized={shouldUnoptimizeImage('/images/brands/brand-logo.png')}
               />
             </div>
           </div>
           <div className="bg-white p-4 rounded-lg shadow-sm flex items-center justify-center">
             <div className="relative h-16 w-full">
-              <Image 
-                src="/placeholder-logo.png" 
-                alt="Brand Logo" 
+              <Image
+                src={ensureAbsoluteImageUrl('/images/brands/brand-logo.png')}
+                alt="Brand Logo"
                 fill
                 style={{ objectFit: 'contain' }}
+                unoptimized={shouldUnoptimizeImage('/images/brands/brand-logo.png')}
               />
             </div>
           </div>
           <div className="bg-white p-4 rounded-lg shadow-sm flex items-center justify-center">
             <div className="relative h-16 w-full">
-              <Image 
-                src="/placeholder-logo.png" 
-                alt="Brand Logo" 
+              <Image
+                src={ensureAbsoluteImageUrl('/images/brands/brand-logo.png')}
+                alt="Brand Logo"
                 fill
                 style={{ objectFit: 'contain' }}
+                unoptimized={shouldUnoptimizeImage('/images/brands/brand-logo.png')}
               />
             </div>
           </div>
@@ -150,8 +155,8 @@ export default async function ProductsPage() {
       <div className="bg-blue-600 text-white rounded-lg p-8 text-center">
         <h2 className="text-3xl font-bold mb-4">Bạn cần tư vấn về sản phẩm?</h2>
         <p className="text-xl mb-6 max-w-2xl mx-auto">Liên hệ với chúng tôi ngay hôm nay để được tư vấn miễn phí và nhận báo giá chi tiết.</p>
-        <Link 
-          href="/lien-he" 
+        <Link
+          href="/lien-he"
           className="bg-white text-blue-600 px-8 py-3 rounded-full font-medium hover:bg-gray-100 transition duration-200 inline-block"
         >
           Liên hệ ngay

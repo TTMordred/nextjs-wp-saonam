@@ -8,7 +8,7 @@ interface PostQuery {
   author?: number;
 }
 
-interface Term {
+export interface Term {
   id: number;
   name: string;
   slug: string;
@@ -359,4 +359,4 @@ export async function getGlobalSettings() {
   };
 }
 
-export type { Post, Term, User, Media, PostQuery };
+export type { Post, User, Media, PostQuery };

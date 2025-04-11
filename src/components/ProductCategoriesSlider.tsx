@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { getProductCategories } from '@/lib/api';
+import { getProductCategories, WooProductCategory } from '@/lib/woocommerce';
 
 interface ProductCategory {
   id: number;
@@ -43,11 +43,11 @@ export default function ProductCategoriesSlider() {
     async function fetchCategories() {
       try {
         // Try to fetch product categories from WordPress
-        const wpCategories = await getProductCategories();
+        const response = await getProductCategories();
 
-        if (wpCategories && wpCategories.length > 0) {
+        if (response?.categories?.length > 0) {
           // Map WordPress categories to our format
-          const formattedCategories = wpCategories.map(cat => ({
+          const formattedCategories = response.categories.map((cat: WooProductCategory) => ({
             id: cat.id,
             name: cat.name,
             slug: cat.slug
@@ -102,7 +102,7 @@ export default function ProductCategoriesSlider() {
     <>
       {/* Spacer to prevent content jump - accounts for both headers */}
       <div className="h-[116px]" />
-      
+
       {/* Fixed sub-header below the main header */}
       <div className="bg-gray-50 border-b border-gray-200 fixed top-[72px] left-0 right-0 z-40">
         <div className="container mx-auto relative">

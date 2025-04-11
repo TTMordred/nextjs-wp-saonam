@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
-import { getTags, getPosts, type Term } from '@/lib/api';
+import { getPosts, type Term } from '@/lib/api';
+import { getTags } from '@/lib/wordpress';
 import { formatDate, extractExcerpt } from '@/lib/formatContent';
 import Image from 'next/image';
 import Link from 'next/link';

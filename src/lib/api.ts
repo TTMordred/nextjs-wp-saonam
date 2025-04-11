@@ -65,12 +65,22 @@ interface Media {
   };
 }
 
-// Create a base axios instance for WordPress API
-const wpApi = axios.create({
+// Create base axios instances for WordPress API
+const wpApiV2 = axios.create({
   baseURL: process.env.NEXT_PUBLIC_WP_API_URL ?? 'https://saonamtg.com/wp-json/wp/v2',
   headers: {
     'Content-Type': 'application/json',
   },
+  timeout: 10000, // 10 seconds timeout
+});
+
+// For custom endpoints and other namespaces
+const wpApiCustom = axios.create({
+  baseURL: 'https://saonamtg.com/wp-json',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  timeout: 10000, // 10 seconds timeout
 });
 
 // Basic authentication for protected endpoints
@@ -83,7 +93,7 @@ const wpApi = axios.create({
 // Fetch pages
 export async function getPage(slug: string): Promise<Post | null> {
   try {
-    const response = await wpApi.get(`/pages?slug=${slug}&_embed`);
+    const response = await wpApiV2.get(`/pages?slug=${slug}&_embed`);
     return response.data[0] ?? null;
   } catch (error) {
     console.error('Error fetching page:', error);
@@ -94,7 +104,7 @@ export async function getPage(slug: string): Promise<Post | null> {
 // Fetch all pages
 export async function getAllPages(): Promise<ReadonlyArray<Post>> {
   try {
-    const response = await wpApi.get('/pages?per_page=100&_embed');
+    const response = await wpApiV2.get('/pages?per_page=100&_embed');
     return response.data ?? [];
   } catch (error) {
     console.error('Error fetching pages:', error);
@@ -140,7 +150,7 @@ export async function getPosts(
       queryParams.append('author', query.author.toString());
     }
 
-    const response = await wpApi.get(`/posts?${queryParams.toString()}`);
+    const response = await wpApiV2.get(`/posts?${queryParams.toString()}`);
 
     return {
       posts: response.data as ReadonlyArray<Post>,
@@ -156,7 +166,7 @@ export async function getPosts(
 // Fetch a single post by slug
 export async function getPost(slug: string): Promise<Post | null> {
   try {
-    const response = await wpApi.get(`/posts?slug=${slug}&_embed`);
+    const response = await wpApiV2.get(`/posts?slug=${slug}&_embed`);
     return response.data[0] ?? null;
   } catch (error) {
     console.error('Error fetching post:', error);
@@ -167,7 +177,7 @@ export async function getPost(slug: string): Promise<Post | null> {
 // Fetch categories
 export async function getCategories(): Promise<ReadonlyArray<Term>> {
   try {
-    const response = await wpApi.get('/categories?per_page=100&hide_empty=true');
+    const response = await wpApiV2.get('/categories?per_page=100&hide_empty=true');
     return response.data ?? [];
   } catch (error) {
     console.error('Error fetching categories:', error);
@@ -178,7 +188,7 @@ export async function getCategories(): Promise<ReadonlyArray<Term>> {
 // Fetch tags
 export async function getTags(): Promise<ReadonlyArray<Term>> {
   try {
-    const response = await wpApi.get('/tags?per_page=100&hide_empty=true');
+    const response = await wpApiV2.get('/tags?per_page=100&hide_empty=true');
     return response.data ?? [];
   } catch (error) {
     console.error('Error fetching tags:', error);
@@ -189,29 +199,54 @@ export async function getTags(): Promise<ReadonlyArray<Term>> {
 // Fetch menu items (requires WP REST API Menus plugin)
 export async function getMenuItems(location: string) {
   try {
-    // Try to fetch from the WP REST API Menus plugin endpoint
-    const response = await wpApi.get(`/menus/v1/locations/${location}`);
-    return response.data ?? null;
+    // Try multiple approaches to get menu items
+    try {
+      // First try WP REST API Menus plugin endpoint
+      const menuResponse = await wpApiCustom.get(`/menus/v1/locations/${location}`);
+      if (menuResponse.data?.items?.length > 0) {
+        return menuResponse.data;
+      }
+    } catch {
+      console.log(`Menu plugin endpoint not available for ${location}, trying alternative...`);
+    }
+
+    // Try to get pages and create a menu from them
+    try {
+      const pagesResponse = await wpApiV2.get('/pages?per_page=20&_fields=id,title,slug&orderby=menu_order&order=asc');
+      if (pagesResponse.data?.length > 0) {
+        return {
+          items: pagesResponse.data.map((page: { id: number; title: { rendered: string }; slug: string }, index: number) => ({
+            id: page.id,
+            title: page.title.rendered,
+            url: `/${page.slug === 'home' ? '' : page.slug}`,
+            order: index + 1
+          }))
+        };
+      }
+    } catch (pagesError) {
+      console.error('Error fetching pages for menu:', pagesError);
+    }
   } catch (error) {
     console.error(`Error fetching menu for location ${location}:`, error);
-    // Return default menu items if the API call fails
-    return {
-      items: [
-        { id: 1, title: 'Trang chủ', url: '/' },
-        { id: 2, title: 'Giới thiệu', url: '/gioi-thieu' },
-        { id: 3, title: 'Sản phẩm', url: '/san-pham' },
-        { id: 4, title: 'Dịch Vụ', url: '/dich-vu' },
-        { id: 5, title: 'Tin Tức', url: '/tin-tuc' },
-        { id: 6, title: 'Liên hệ', url: '/lien-he' },
-      ]
-    };
   }
+
+  // Return default menu items if all attempts fail
+  return {
+    items: [
+      { id: 1, title: 'Trang chủ', url: '/' },
+      { id: 2, title: 'Giới thiệu', url: '/gioi-thieu' },
+      { id: 3, title: 'Sản phẩm', url: '/san-pham' },
+      { id: 4, title: 'Dịch Vụ', url: '/dich-vu' },
+      { id: 5, title: 'Tin Tức', url: '/tin-tuc' },
+      { id: 6, title: 'Liên hệ', url: '/lien-he' },
+    ]
+  };
 }
 
 // Fetch media by ID
 export async function getMedia(id: number): Promise<Media | null> {
   try {
-    const response = await wpApi.get(`/media/${id}`);
+    const response = await wpApiV2.get(`/media/${id}`);
     return response.data ?? null;
   } catch (error) {
     console.error('Error fetching media:', error);
@@ -222,7 +257,7 @@ export async function getMedia(id: number): Promise<Media | null> {
 // Fetch a user by ID
 export async function getUser(id: number): Promise<User | null> {
   try {
-    const response = await wpApi.get(`/users/${id}`);
+    const response = await wpApiV2.get(`/users/${id}`);
     return response.data ?? null;
   } catch (error) {
     console.error('Error fetching user:', error);
@@ -236,7 +271,7 @@ export async function searchContent(
   type = 'post'
 ): Promise<ReadonlyArray<Post>> {
   try {
-    const response = await wpApi.get(`/search?search=${query}&type=${type}&_embed`);
+    const response = await wpApiV2.get(`/search?search=${query}&type=${type}&_embed`);
     return response.data ?? [];
   } catch (error) {
     console.error('Error searching content:', error);
@@ -247,25 +282,50 @@ export async function searchContent(
 // Fetch global settings (site title, logo, etc.)
 export async function getGlobalSettings() {
   try {
-    // Assuming you have a custom endpoint or options page
-    // If using ACF to REST API plugin, you might use /acf/v3/options/options
-    const response = await wpApi.get('/acf/v3/options/options');
-    return response.data?.acf ?? {};
+    // Try multiple approaches to get site settings
+    try {
+      // First try ACF endpoint if available
+      const acfResponse = await wpApiCustom.get('/acf/v3/options/options');
+      if (acfResponse.data?.acf) {
+        return acfResponse.data.acf;
+      }
+    } catch {
+      console.log('ACF options not available, trying site info...');
+    }
+
+    // Fallback to basic site info
+    const siteResponse = await wpApiCustom.get('/');
+    if (siteResponse.data) {
+      const { name, description, url, site_logo_url } = siteResponse.data;
+      return {
+        site_name: name,
+        site_description: description,
+        site_url: url,
+        site_logo: site_logo_url ? {
+          url: site_logo_url,
+          alt: name
+        } : {
+          url: '/logo.png',
+          alt: name || 'Sao Nam TG Logo'
+        }
+      };
+    }
   } catch (error) {
     console.error('Error fetching global settings:', error);
-    // Return default values
-    return {
-      site_name: 'Sao Nam TG',
-      site_description: 'Công ty TNHH Thương mại và Dịch vụ Sao Nam',
-      site_logo: {
-        url: '/logo.png',
-        alt: 'Sao Nam TG Logo'
-      },
-      contact_email: 'info@saonamtg.com',
-      contact_phone: '0123456789',
-      social_links: []
-    };
   }
+
+  // Return default values if all attempts fail
+  return {
+    site_name: 'Sao Nam TG',
+    site_description: 'Công ty TNHH Thương mại và Dịch vụ Sao Nam',
+    site_logo: {
+      url: '/logo.png',
+      alt: 'Sao Nam TG Logo'
+    },
+    contact_email: 'info@saonamtg.com',
+    contact_phone: '0123456789',
+    social_links: []
+  };
 }
 
 export type { Post, Term, User, Media, PostQuery };
